@@ -1,7 +1,15 @@
-# Grower
-Grower: **G**eneral **R**untime **O**n **WE**b browser**R**s
+# Grower 
+Grower: **G**eneral **R**untime **O**n **WE**b browser**R**s **[Now Development]**
 
 A Library for development language runtimes that run on Web Browsers.
+
+## Install
+
+Now available on [crates.io](https://crates.io/crates/grower).
+
+```sh
+cargo add grower
+```
 
 
 ## Features
