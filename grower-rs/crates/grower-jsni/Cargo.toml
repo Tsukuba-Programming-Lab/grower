@@ -1,10 +1,11 @@
 [package]
 name = "grower-jsni"
-edition.workspace = true
-version.workspace = true
-authors.workspace = true
-description.workspace = true
-documentation.workspace = true
+version = "0.0.1"
+edition = "2021"
+authors = ["itsu-dev"]
+description = "A Library for development language runtimes that run on Web Browsers."
+documentation = "https://github.com/Tsukuba-Programming-Lab/grower"
+license = "MIT"
 
 [dependencies]
 wasm-bindgen = "0.2.92"
