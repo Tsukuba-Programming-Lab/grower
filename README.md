@@ -1,12 +1,14 @@
 # Grower
-ブラウザ上で稼働する言語ランタイムのためのライブラリ（**G**eneral **R**untime **O**n **WE**b browser**R**s）
+Grower: **G**eneral **R**untime **O**n **WE**b browser**R**s
+
+A Library for development language runtimes that run on Web Browsers.
 
 ## Structures
 
 ### grower-rs
 
-言語ランタイムのうち，WebAssembly コードとして動作する部分を実装するための Rust クレート．
+A Rust crate to implement parts of Language Runtimes running as WebAssembly codes.
 
 ### grower-js
 
-言語ランタイムのうち，JavaScript コードとして動作する部分を実装するための Rust クレート．
+A npm library to implement parts of Language Runtimes running as JavaScript codes.
