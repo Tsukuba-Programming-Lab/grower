@@ -1,7 +1,23 @@
-[package]
-name = "grower-rs"
+[workspace]
+resolver = "3"
+members = ["crates/grower-jsni"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2021"
+authors = ["itsu-dev"]
+description = "A Library for development language runtimes that run on Web Browsers."
+documentation = "https://github.com/Tsukuba-Programming-Lab/grower"
+license = "MIT"
+
+[package]
+name = "grower"
+version = "0.1.0"
+edition = "2021"
+authors = ["itsu-dev"]
+description = "A Library for development language runtimes that run on Web Browsers."
+documentation = "https://github.com/Tsukuba-Programming-Lab/grower"
+license = "MIT"
 
 [dependencies]
-jsni = { path = "./crates/jsni", version = "0.1.0" }
+jsni = { package = "grower-jsni", path = "./crates/grower-jsni", version = "0.1.0" }
