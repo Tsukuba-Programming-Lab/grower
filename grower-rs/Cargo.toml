@@ -1,0 +1,7 @@
+[package]
+name = "grower-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+jsni = { path = "./crates/jsni" }
