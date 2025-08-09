@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-jsni = { path = "./crates/jsni" }
+jsni = { path = "./crates/jsni", version = "0.1.0" }
