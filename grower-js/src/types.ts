@@ -1,0 +1,1 @@
+export type JSNIValue = string | number | Uint8Array | null;
