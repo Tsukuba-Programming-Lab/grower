@@ -116,6 +116,22 @@ impl JSNIValue {
             value: 0,
         }
     }
+
+    pub fn to_vec(&self) ->Vec<u8> {
+        if self.kind != JSNIKind::VecU8 {
+            panic!("JSNIValue is not a Vec<u8>");
+        }
+        let ptr = self.value & 0xFFFFFFFF;
+        unsafe { *Box::from_raw(ptr as *mut Vec<u8>) }
+    }
+
+    pub fn to_string(&self) -> String {
+        if self.kind != JSNIKind::String {
+            panic!("JSNIValue is not a String");
+        }
+        let vec = self.to_vec();
+        String::from_utf8(vec).unwrap()
+    }
 }
 
 pub struct JavaScriptNativeInterface {
