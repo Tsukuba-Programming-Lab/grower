@@ -1,3 +1,4 @@
+
 [package]
 name = "grower"
 version = "0.0.1"
@@ -8,4 +9,4 @@ documentation = "https://github.com/Tsukuba-Programming-Lab/grower"
 license = "MIT"
 
 [dependencies]
-jsni = { package = "grower-jsni", version = "0.0.1" }
+jsni = { package = "grower-jsni", version = "0.0.2" }

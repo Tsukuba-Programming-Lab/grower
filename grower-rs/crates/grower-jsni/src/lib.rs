@@ -16,16 +16,17 @@ pub enum JSNIKind {
     U64,
     F32,
     F64,
+    Bool,
+    Char,
     String,
-    U8Array,
-    Reference,
+    VecU8,
     Null,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct JSNIValue {
-    kind: JSNIKind,
-    value: u64,
+    pub kind: JSNIKind,
+    pub value: u64,
 }
 
 macro_rules! impl_from_primitive {
@@ -49,7 +50,8 @@ impl_from_primitive!(u8, JSNIKind::U8);
 impl_from_primitive!(u16, JSNIKind::U16);
 impl_from_primitive!(u32, JSNIKind::U32);
 impl_from_primitive!(u64, JSNIKind::U64);
-impl_from_primitive!(usize, JSNIKind::Reference);
+impl_from_primitive!(bool, JSNIKind::Bool);
+impl_from_primitive!(char, JSNIKind::Char);
 
 impl From<f32> for JSNIValue {
     fn from(value: f32) -> Self {
@@ -87,7 +89,7 @@ impl From<Vec<u8>> for JSNIValue {
         let ptr = value.as_ptr() as *mut u8;
         std::mem::forget(value); // Prevent Rust from freeing the memory
         JSNIValue {
-            kind: JSNIKind::U8Array,
+            kind: JSNIKind::VecU8,
             // high: len 32bit, low: ptr 64bit
             value: (len as u64) << 32 | ptr as u64,
         }
@@ -165,7 +167,7 @@ impl JavaScriptNativeInterface {
         // Deallocate the arguments
         for arg in args.iter() {
             match arg.kind {
-                JSNIKind::U8Array => {
+                JSNIKind::VecU8 => {
                     let len = (arg.value >> 32) as usize;
                     let ptr = (arg.value & 0xFFFFFFFF) as *mut u8;
                     unsafe { Vec::from_raw_parts(ptr, len, len) };
