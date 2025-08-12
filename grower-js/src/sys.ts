@@ -107,17 +107,17 @@ export const stat = async (path: string): Promise<number[]> => {
  * @return The file descriptor, or -1 if the file does not exist.
  * @see https://manpages.ubuntu.com/manpages/focal/ja/man2/open.2.html
  */
-export const open = async (path: string): Promise<number> => {
+export const open = async (path: string): Promise<number[]> => {
     const handle = await getFileHandle(path);
 
     if (!handle) {
-        return -1;
+        return [-1];
     }
 
     const result = Object.keys((window as _Window)[FDMAP]).length + 3;
     (window as _Window)[FDMAP][result] = handle;
 
-    return result;
+    return [result];
 }
 
 /**
@@ -126,12 +126,12 @@ export const open = async (path: string): Promise<number> => {
  * @returns 0 on success, -1 on failure.
  * @see https://manpages.ubuntu.com/manpages/focal/ja/man2/close.2.html
  */
-export const close = (fd: number): number => {
+export const close = (fd: number): number[] => {
     if (!(fd in (window as _Window)[FDMAP])) {
-        return -1; // Invalid file descriptor
+        return [-1]; // Invalid file descriptor
     }
     delete (window as _Window)[FDMAP][fd];
-    return 0;
+    return [0];
 }
 
 /**
@@ -143,15 +143,15 @@ export const close = (fd: number): number => {
  * @return The number of bytes written, or 0 if the file descriptor is invalid.
  * @see https://manpages.ubuntu.com/manpages/focal/ja/man2/write.2.html
  * */
-export const write = async (fd: number, b: Uint8Array, off: number, len: number): Promise<number> => {
+export const write = async (fd: number, b: Uint8Array, off: number, len: number): Promise<number[]> => {
     const data = b.subarray(off, off + len);
 
     if (fd === FdReserved.OUT) {
         (window as _Window)[STDOUT_HANDLER](new TextDecoder().decode(data));
-        return data.length;
+        return [data.length];
     } else if (fd === FdReserved.ERR) {
         (window as _Window)[STDERR_HANDLER](new TextDecoder().decode(data));
-        return data.length;
+        return [data.length];
     }
 
 // TODO
@@ -159,7 +159,22 @@ export const write = async (fd: number, b: Uint8Array, off: number, len: number)
 // const file = await handle.getFile();
 // const data = Array.from(new Uint8Array(await file.arrayBuffer()));
 
-    return 0;
+    return [0];
+}
+
+/**
+ * TODO
+ *
+ * Reads data from a file descriptor.
+ * @param fd The file descriptor to read from.
+ * @return A promise that resolves to a tuple containing the data as a Uint8Array and the number of bytes read.
+ * @see https://manpages.ubuntu.com/manpages/focal/ja/man2/read.2.html
+ * */
+export const read = async (fd: number): Promise<[Uint8Array, number]> => {
+    const handle = (window as any)[FDMAP][fd] as FileSystemFileHandle;
+    const file = await handle.getFile();
+    const data = new Uint8Array(await file.arrayBuffer());
+    return [data, data.length];
 }
 
 const getFileHandle = async (path: string): Promise<FileSystemHandle | undefined> => {

@@ -25,7 +25,7 @@ export default class JavaScriptNativeInterface {
         (window as _Window)[ENTRY_POINT] = async (jsFuncNamePtr: number, argsPtr: number, argsCount: number): Promise<number> => {
             const session = new JSNIFunctionCallingSession(this.imports, this.memory, jsFuncNamePtr, argsPtr, argsCount);
             const value = await session.call();
-            return session.buildReturnValues(value);
+            return value ? session.buildReturnValues(value) : -1;
         };
     }
 
