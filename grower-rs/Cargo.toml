@@ -1,7 +1,7 @@
 
 [package]
 name = "grower"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 authors = ["itsu-dev"]
 description = "A Library for development language runtimes that run on Web Browsers."
