@@ -46,7 +46,6 @@ export default class JavaScriptNativeInterface {
         (window as _Window)[ENTRY_POINT] = async (jsFuncNamePtr: number, argsPtr: number, argsCount: number): Promise<number> => {
             const session = new JSNIFunctionCallingSession(this.imports, this.memory, jsFuncNamePtr, argsPtr, argsCount);
             const value = await session.call();
-            console.log(value)
             return value ? session.buildReturnValues(value) : -1;
         };
     }
@@ -153,15 +152,10 @@ class JSNIFunctionCallingSession {
                     break;
             }
         }
-        console.log(args);
         return args;
     }
 
     buildReturnValues(values: any[]): number {
-        if (!values) {
-            return -1;
-        }
-
         const size = values.length; // 16 bytes per value
         const fat_ptr = this.imports.alloc_jsni_value(size);
         const ptr = Number(fat_ptr & BigInt(0xffffffff));
