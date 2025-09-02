@@ -129,7 +129,8 @@ impl JSNIValue {
         if self.kind != JSNIKind::String {
             panic!("JSNIValue is not a String");
         }
-        let vec = self.to_vec();
+        let ptr = self.value & 0xFFFFFFFF;
+        let vec = unsafe { *Box::from_raw(ptr as *mut Vec<u8>) };
         String::from_utf8(vec).unwrap()
     }
 }
