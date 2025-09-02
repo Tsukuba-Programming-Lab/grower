@@ -1,7 +1,10 @@
 import {GrowerRsImports, JSNIFunction} from "./types.ts";
 
 const FUNCTIONS = "__grower_jsni_functions";
-const ENTRY_POINT = "__grower_jsni_call";
+
+// TODO should be __grower_jsni_call
+const ENTRY_POINT = "jsni_call";
+
 type _Window = Window & typeof global & {
     [ENTRY_POINT]: (jsFuncNamePtr: number, argsPtr: number, argsCount: number) => Promise<number>;
     [FUNCTIONS]: Record<string, JSNIFunction>;
@@ -24,6 +27,7 @@ export default class JavaScriptNativeInterface {
 
         (window as _Window)[ENTRY_POINT] = async (jsFuncNamePtr: number, argsPtr: number, argsCount: number): Promise<number> => {
             const session = new JSNIFunctionCallingSession(this.imports, this.memory, jsFuncNamePtr, argsPtr, argsCount);
+            console.log(session);
             const value = await session.call();
             return value ? session.buildReturnValues(value) : -1;
         };
@@ -66,6 +70,7 @@ class JSNIFunctionCallingSession {
     }
 
     async call() {
+        console.log(`JSNI: Calling function ${this.functionName} with args`, this.args, (window as _Window)[FUNCTIONS][this.functionName]);
         return (window as _Window)[FUNCTIONS][this.functionName](...this.args);
     }
 
