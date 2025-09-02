@@ -170,24 +170,8 @@ impl JavaScriptNativeInterface {
         JavaScriptNativeInterface {}
     }
 
-    /// Calls the JavaScript function.
-    /// Must be set registers with uarguments to pass to the JavaScript function before calling this function.
-    /// Returns a vector of results.
-    /// The first register is the count of results, followed by the results themselves.
-    pub async fn call(&mut self, js_func_name: String, args: Vec<JSNIValue>) -> Vec<JSNIValue> {
-        let js_func_name = JSNIValue::from(js_func_name);
-        let js_func_name_ptr = &js_func_name as *const JSNIValue as *const u8;
-
-        let return_values_ptr_raw = jsni_call(js_func_name_ptr, args.as_ptr() as *mut u8, args.len()).await.as_f64().unwrap();
-        if return_values_ptr_raw == -1.0 {
-            // none returned
-            return Vec::new();
-        }
-
-        let return_values = unsafe { Box::from_raw(return_values_ptr_raw as u64 as *mut Vec<JSNIValue>) };
-
-        // Deallocate the arguments
-        for arg in args.iter() {
+    fn free_args(&self, args: Vec<JSNIValue>) {
+        for arg in args {
             match arg.kind {
                 JSNIKind::VecU8 => {
                     let len = (arg.value >> 32) as usize;
@@ -202,7 +186,25 @@ impl JavaScriptNativeInterface {
                 _ => {}
             }
         }
+    }
 
+    /// Calls the JavaScript function.
+    /// Must be set registers with uarguments to pass to the JavaScript function before calling this function.
+    /// Returns a vector of results.
+    /// The first register is the count of results, followed by the results themselves.
+    pub async fn call(&mut self, js_func_name: String, args: Vec<JSNIValue>) -> Vec<JSNIValue> {
+        let js_func_name = JSNIValue::from(js_func_name);
+        let js_func_name_ptr = &js_func_name as *const JSNIValue as *const u8;
+
+        let return_values_ptr_raw = jsni_call(js_func_name_ptr, args.as_ptr() as *mut u8, args.len()).await.as_f64().unwrap();
+        self.free_args(args);
+
+        if return_values_ptr_raw < 0.0 {
+            // none returned
+            return Vec::new();
+        }
+
+        let return_values = unsafe { Box::from_raw(return_values_ptr_raw as u64 as *mut Vec<JSNIValue>) };
         *return_values
     }
 }
