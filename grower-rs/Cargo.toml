@@ -9,4 +9,4 @@ documentation = "https://github.com/Tsukuba-Programming-Lab/grower"
 license = "MIT"
 
 [dependencies]
-jsni = { package = "grower-jsni", version = "0.0.3" }
+jsni = { package = "grower-jsni", version = "0.0.4" }
