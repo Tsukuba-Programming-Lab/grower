@@ -10,6 +10,24 @@ type _Window = Window & typeof global & {
     [FUNCTIONS]: Record<string, JSNIFunction>;
 };
 
+enum JSNIKind {
+    I8 = 0,
+    I16 = 1,
+    I32 = 2,
+    I64 = 3,
+    U8 = 4,
+    U16 = 5,
+    U32 = 6,
+    U64 = 7,
+    F32 = 8,
+    F64 = 9,
+    Bool = 10,
+    Char = 11,
+    String = 12,
+    VecU8 = 13,
+    Null = 14,
+}
+
 export default class JavaScriptNativeInterface {
 
     private readonly imports: GrowerRsImports;
@@ -27,7 +45,6 @@ export default class JavaScriptNativeInterface {
 
         (window as _Window)[ENTRY_POINT] = async (jsFuncNamePtr: number, argsPtr: number, argsCount: number): Promise<number> => {
             const session = new JSNIFunctionCallingSession(this.imports, this.memory, jsFuncNamePtr, argsPtr, argsCount);
-            console.log(session);
             const value = await session.call();
             return value ? session.buildReturnValues(value) : -1;
         };
@@ -70,7 +87,6 @@ class JSNIFunctionCallingSession {
     }
 
     async call() {
-        console.log(`JSNI: Calling function ${this.functionName} with args`, this.args, (window as _Window)[FUNCTIONS][this.functionName]);
         return (window as _Window)[FUNCTIONS][this.functionName](...this.args);
     }
 
@@ -79,48 +95,43 @@ class JSNIFunctionCallingSession {
         for (let i = 0; i < this.argsCount; i++) {
             const type = this.view.getUint8(this.argsPtr + i * 16 + 8);
             switch (type) {
-                // i8
-                case 0:
+                case JSNIKind.I8:
                     args.push(this.view.getInt8(this.argsPtr + i * 16));
                     break;
-                // i16
-                case 1:
+                case JSNIKind.I16:
                     args.push(this.view.getInt16(this.argsPtr + i * 16, true));
                     break;
-                // i32
-                case 2:
+                case JSNIKind.I32:
                     args.push(this.view.getInt32(this.argsPtr + i * 16, true));
                     break;
-                // i64
-                case 3:
+                case JSNIKind.I64:
                     args.push(this.view.getBigInt64(this.argsPtr + i * 16, true));
                     break;
-                // u8
-                case 4:
+                case JSNIKind.U8:
                     args.push(this.view.getUint8(this.argsPtr + i * 16));
                     break;
-                // u16
-                case 5:
+                case JSNIKind.U16:
                     args.push(this.view.getUint16(this.argsPtr + i * 16, true));
                     break;
-                // u32
-                case 6:
+                case JSNIKind.U32:
                     args.push(this.view.getUint32(this.argsPtr + i * 16, true));
                     break;
-                // u64
-                case 7:
+                case JSNIKind.U64:
                     args.push(this.view.getBigUint64(this.argsPtr + i * 16, true));
                     break;
-                // f32
-                case 8:
-                    args.push(this.view.getFloat32(this.argsPtr + i * 16, true));
-                    break;
-                // f64
-                case 9:
+                case JSNIKind.F64:
                     args.push(this.view.getFloat64(this.argsPtr + i * 16, true));
                     break;
-                // String
-                case 10:
+                case JSNIKind.F32:
+                    args.push(this.view.getFloat32(this.argsPtr + i * 16, true));
+                    break;
+                case JSNIKind.Bool:
+                    args.push(this.view.getUint8(this.argsPtr + i * 16) !== 0);
+                    break;
+                case JSNIKind.Char:
+                    args.push(String.fromCharCode(this.view.getUint16(this.argsPtr + i * 16, true)));
+                    break;
+                case JSNIKind.String:
                     args.push(
                         this.readString(
                             this.view.getUint32(this.argsPtr + i * 16, true),
@@ -128,8 +139,7 @@ class JSNIFunctionCallingSession {
                         )
                     );
                     break;
-                // U8Array
-                case 11:
+                case JSNIKind.VecU8:
                     args.push(
                         this.readVec(
                             this.view.getUint32(this.argsPtr + i * 16, true),
@@ -137,8 +147,7 @@ class JSNIFunctionCallingSession {
                         )
                     );
                     break;
-                // null
-                case 13:
+                case JSNIKind.Null:
                     args.push(null);
                     break;
             }
@@ -156,15 +165,15 @@ class JSNIFunctionCallingSession {
                 case "number":
                     if (Number.isInteger(values[i])) {
                         this.view.setBigInt64(ptr + i * 16, BigInt(values[i]), true);
-                        this.view.setInt32(ptr + i * 16 + 8, 3, true);
+                        this.view.setInt32(ptr + i * 16 + 8, JSNIKind.I64, true);
                     } else {
                         this.view.setFloat64(ptr + i * 16, values[i], true);
-                        this.view.setInt32(ptr + i * 16 + 8, 9, true);
+                        this.view.setInt32(ptr + i * 16 + 8, JSNIKind.F64, true);
                     }
                     break;
                 case "bigint":
                     this.view.setBigInt64(ptr + i * 16, values[i], true);
-                    this.view.setInt32(ptr + i * 16 + 8, 3, true);
+                    this.view.setInt32(ptr + i * 16 + 8, JSNIKind.I64, true);
                     break;
                 case "string":
                     const strBytes = new TextEncoder().encode(values[i]);
@@ -173,7 +182,7 @@ class JSNIFunctionCallingSession {
                     this.arr.set(strBytes, strPtr);
                     this.arr[strPtr + strBytes.length] = 0; // null terminator
                     this.view.setUint32(ptr + i * 16, Number(strFatPtr >> BigInt(32)), true);
-                    this.view.setInt32(ptr + i * 16 + 8, 10, true);
+                    this.view.setInt32(ptr + i * 16 + 8, JSNIKind.String, true);
                     break;
                 case "object":
                     if (values[i] instanceof Uint8Array) {
@@ -182,10 +191,10 @@ class JSNIFunctionCallingSession {
                         const vecPtr = Number(vecFatPtr & BigInt(0xffffffff));
                         this.arr.set(vecBytes, vecPtr);
                         this.view.setUint32(ptr + i * 16, Number(vecFatPtr >> BigInt(32)), true);
-                        this.view.setInt32(ptr + i * 16 + 8, 11, true);
+                        this.view.setInt32(ptr + i * 16 + 8, JSNIKind.VecU8, true);
                     } else if (values[i] === null) {
-                        this.view.setUint32(ptr + i * 16, 0, true);
-                        this.view.setInt32(ptr + i * 16 + 8, 13, true);
+                        // this.view.setUint32(ptr + i * 16, 0, true);
+                        this.view.setInt32(ptr + i * 16 + 8, JSNIKind.Null, true);
                     } else {
                         throw new Error(`Unsupported object type: ${typeof values[i]}`);
                     }
