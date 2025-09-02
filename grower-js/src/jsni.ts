@@ -177,10 +177,9 @@ class JSNIFunctionCallingSession {
                     break;
                 case "string":
                     const strBytes = new TextEncoder().encode(values[i]);
-                    const strFatPtr = this.imports.alloc(strBytes.length + 1); // 1 byte for null terminator
+                    const strFatPtr = this.imports.alloc(strBytes.length);
                     const strPtr = Number(strFatPtr & BigInt(0xffffffff));
                     this.arr.set(strBytes, strPtr);
-                    this.arr[strPtr + strBytes.length] = 0; // null terminator
                     this.view.setUint32(ptr + i * 16, Number(strFatPtr >> BigInt(32)), true);
                     this.view.setInt32(ptr + i * 16 + 8, JSNIKind.String, true);
                     break;
